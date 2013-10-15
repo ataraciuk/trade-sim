@@ -3,9 +3,21 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<title>Trade simulator</title>
+	<link rel="stylesheet" type="text/css" href="css/style.css" />
 </head>
 <body>
+	<div id="timer"></div>
+	<div id="markets"></div>
+	<div id="user">
+		<h2>Your possessions</h2>
+		<div>
+			Money: $<span id="userMoney"></span>
+		</div>
+		<table id="userStock">
+		</table>
+	</div>
 	<script type="text/javascript" src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+	<script type="text/javascript" src="js/linq.min.js"></script>
 	<script type="text/javascript" src="js/main.js"></script>
 </body>
 </html>
