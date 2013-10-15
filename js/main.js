@@ -46,9 +46,33 @@ TradeSim.onSecond = function() {
 	TradeSim.duration--;
 	if(TradeSim.duration > 0) {
 		TradeSim.DOM.timer.html(TradeSim.duration);
+		if(TradeSim.duration % TradeSim.productsCycle === 0) {
+			for(i = 0, l = TradeSim.markets.length; i < l; i++) {
+				var market = TradeSim.markets[i];
+				for(j = 0, m = market.produces.length; j < m; j++) {
+					var prod = market.produces[j];
+					market.stock[prod] += TradeSim.productVar;
+					if(market.stock[prod] > TradeSim.maxStock) market.stock[prod] = TradeSim.maxStock;
+					TradeSim.updateDomProd(i, prod);
+				}
+				for(j = 0, m = market.consumes.length; j < m; j++) {
+					var prod = market.consumes[j];
+					market.stock[prod] -= TradeSim.productVar;
+					if(market.stock[prod] < 0) market.stock[prod] = 0;
+					TradeSim.updateDomProd(i, prod);
+				}
+			}
+		}
 	} else {
 
 	}
+}
+
+TradeSim.updateDomProd = function(m, p) {
+	var row = TradeSim.DOM.markets[m][p];
+	row.children(':nth-child(2)').html(TradeSim.markets[m].stock[p]);
+	row.children(':nth-child(3)').html('$'+TradeSim.buyPrize(m,p));
+	row.children(':nth-child(4)').html('$'+TradeSim.sellPrize(m,p));
 }
 
 TradeSim.initDOM = function() {
@@ -66,23 +90,27 @@ TradeSim.initDOM = function() {
 		DOMMarket.append('<div>Produces: '+Enumerable.From(market.produces).Select("TradeSim.products[$].name").ToArray().join(', ')+'</div>');
 		DOMMarket.append('<div>Consumes: '+Enumerable.From(market.consumes).Select("TradeSim.products[$].name").ToArray().join(', ')+'</div>');
 		var table = $('<table><tr><th>Product</th><th>In stock</th><th>Buy for</th><th>Sell for</th></tr></table>').appendTo(DOMMarket);
+		TradeSim.DOM.markets[i] = [];
 		for(j = 0, m = TradeSim.products.length; j < m; j++) {
 			var product = TradeSim.products[j];
 			table.append('<tr id="marketProduct-'+i+'-'+j+'"><td><img src="'+product.img+'" />'+product.name+
 				'</td><td>'+market.stock[j]+'</td><td>$'+TradeSim.buyPrize(i,j)+'</td><td>$'+
 				TradeSim.sellPrize(i,j)+'</td></tr>');
+			TradeSim.DOM.markets[i][j] = table.find('#marketProduct-'+i+'-'+j);
 		}
-		TradeSim.DOM.markets.append(DOMMarket);
+		$('#markets').append(DOMMarket);
 	}
 }
 
 TradeSim.DOM = {
 	timer: $('#timer'),
-	markets: $('#markets'),
+	markets: [],
 	user: $('#user')
 };
 
 TradeSim.maxStock = 100;
 TradeSim.duration = 120; //seconds
+TradeSim.productsCycle = 5; //seconds
+TradeSim.productVar = 3;
 
 TradeSim.init();
