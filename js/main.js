@@ -17,6 +17,8 @@ TradeSim.user = {
 	stock: []
 };
 
+TradeSim.currentMarket = 0;
+
 TradeSim.init = function() {
 	for(i = 0, l = TradeSim.markets.length; i < l; i++) {
 		var market = TradeSim.markets[i];
@@ -28,8 +30,19 @@ TradeSim.init = function() {
 	for(i = 0, l = TradeSim.products.length; i < l; i++) {
 		TradeSim.user.stock[i] = 0;
 	}
-
 	TradeSim.initDOM();
+	$('#changeMarket').click(function(e){
+		e.preventDefault();
+		$(this).attr('disabled', 'disabled');
+		$('.market').hide();
+		$('#switching').show();
+		setTimeout(function(){
+			$('#switching').hide();
+			TradeSim.currentMarket = (TradeSim.currentMarket + 1) % TradeSim.markets.length;
+			$('.market#market'+TradeSim.currentMarket).show();
+			$('#changeMarket').removeAttr('disabled');
+		}, TradeSim.travelTime * 1000);
+	});
 	setInterval(TradeSim.onSecond, 1000);
 }
 
@@ -86,7 +99,7 @@ TradeSim.initDOM = function() {
 	}
 	for(i = 0, l = TradeSim.markets.length; i < l; i++) {
 		var market = TradeSim.markets[i];
-		var DOMMarket = $('<div id="market'+i+'"><h2>'+market.name+'</h2></div>');
+		var DOMMarket = $('<div id="market'+i+'" class="market"><h2>'+market.name+'</h2></div>');
 		DOMMarket.append('<div>Produces: '+Enumerable.From(market.produces).Select("TradeSim.products[$].name").ToArray().join(', ')+'</div>');
 		DOMMarket.append('<div>Consumes: '+Enumerable.From(market.consumes).Select("TradeSim.products[$].name").ToArray().join(', ')+'</div>');
 		var table = $('<table><tr><th>Product</th><th>In stock</th><th>Buy for</th><th>Sell for</th></tr></table>').appendTo(DOMMarket);
@@ -98,7 +111,7 @@ TradeSim.initDOM = function() {
 				TradeSim.sellPrize(i,j)+'</td></tr>');
 			TradeSim.DOM.markets[i][j] = table.find('#marketProduct-'+i+'-'+j);
 		}
-		$('#markets').append(DOMMarket);
+		$('#markets').append(DOMMarket).children('.market').first().show();
 	}
 }
 
@@ -110,7 +123,8 @@ TradeSim.DOM = {
 
 TradeSim.maxStock = 100;
 TradeSim.duration = 120; //seconds
-TradeSim.productsCycle = 5; //seconds
-TradeSim.productVar = 3;
+TradeSim.productsCycle = 2; //seconds
+TradeSim.productVar = 5;
+TradeSim.travelTime = 5;
 
 TradeSim.init();

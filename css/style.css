@@ -47,7 +47,7 @@ table {
 	border-spacing: 0;
 }
 
-
+/* ---------------- end of reset css ------------------- */
 
 
 
@@ -62,8 +62,21 @@ table {
 	padding: 2px 5px;
 	vertical-align: middle;
 	text-align: center;
+	border: 1px solid black;
 }
 
 #markets > div {
 	margin-bottom: 20px;
+}
+
+#markets .market, #switching {
+	display: none;
+}
+
+#changeMarketContainer {
+	margin: 20px 0 20px;
+}
+
+body{
+	margin: 10px;
 }
