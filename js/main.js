@@ -18,6 +18,7 @@ TradeSim.user = {
 };
 
 TradeSim.currentMarket = 0;
+TradeSim.gameOver = false;
 
 TradeSim.init = function() {
 	for(i = 0, l = TradeSim.markets.length; i < l; i++) {
@@ -110,8 +111,9 @@ TradeSim.onSecond = function() {
 				}
 			}
 		}
-	} else {
-
+	} else if(!TradeSim.gameOver) {
+		TradeSim.gameOver = true;
+		alert('Game over!\nYour final score is '+TradeSim.user.money);
 	}
 }
 
