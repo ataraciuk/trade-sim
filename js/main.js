@@ -1,10 +1,10 @@
 TradeSim = {};
 
 TradeSim.products = [
-	{ name: 'Wands', img: 'img/wand.jpg', basePrize: 20, modifier: 0.5 },
+	{ name: 'Wands', img: 'img/wand.jpg', basePrize: 20, modifier: 0.3 },
 	{ name: 'Swords', img: 'img/Sword.png', basePrize: 50, modifier: 0.2 },
-	{ name: 'Ponies', img: 'img/pony.gif', basePrize: 30, modifier: 0.4 },
-	{ name: 'Masks', img: 'img/mask.jpg', basePrize: 12, modifier: 0.8 }
+	{ name: 'Ponies', img: 'img/pony.gif', basePrize: 30, modifier: 0.25 },
+	{ name: 'Masks', img: 'img/mask.jpg', basePrize: 12, modifier: 0.45 }
 ];
 
 TradeSim.markets = [
@@ -43,7 +43,41 @@ TradeSim.init = function() {
 			$('#changeMarket').removeAttr('disabled');
 		}, TradeSim.travelTime * 1000);
 	});
+	$('.buy').click(function(e) {
+		e.preventDefault();
+		var rowIdSplit = TradeSim.DOM.getRowIdFromButton($(this)).split('-');
+		var market = rowIdSplit[1];
+		var prod = rowIdSplit[2];
+		if(TradeSim.checkCanBuy(market, prod)) {
+			TradeSim.user.stock[prod]++;
+			TradeSim.user.money -= TradeSim.buyPrize(market, prod);
+			TradeSim.markets[market].stock[prod]--;
+			TradeSim.updateDomProd(market, prod);
+			TradeSim.updateDomUser(prod);
+		}
+	});
+	$('.sell').click(function(e) {
+		e.preventDefault();
+		var rowIdSplit = TradeSim.DOM.getRowIdFromButton($(this)).split('-');
+		var market = rowIdSplit[1];
+		var prod = rowIdSplit[2];
+		if(TradeSim.checkCanSell(market, prod)) {
+			TradeSim.user.stock[prod]--;
+			TradeSim.user.money += TradeSim.sellPrize(market, prod);
+			TradeSim.markets[market].stock[prod]++;
+			TradeSim.updateDomProd(market, prod);
+			TradeSim.updateDomUser(prod);
+		}
+	});
 	setInterval(TradeSim.onSecond, 1000);
+}
+
+TradeSim.checkCanSell = function(m,p) {
+	return TradeSim.user.stock[p] > 0;
+}
+
+TradeSim.checkCanBuy = function(m,p) {
+	return TradeSim.markets[m].stock[p] > 0 && TradeSim.user.money >= TradeSim.buyPrize(m,p);
 }
 
 TradeSim.buyPrize = function(m, p) {
@@ -84,18 +118,35 @@ TradeSim.onSecond = function() {
 TradeSim.updateDomProd = function(m, p) {
 	var row = TradeSim.DOM.markets[m][p];
 	row.children(':nth-child(2)').html(TradeSim.markets[m].stock[p]);
-	row.children(':nth-child(3)').html('$'+TradeSim.buyPrize(m,p));
-	row.children(':nth-child(4)').html('$'+TradeSim.sellPrize(m,p));
+	var buyBtn = row.children(':nth-child(3)').children('button');
+	buyBtn.html('$'+TradeSim.buyPrize(m,p));
+	var sellBtn = row.children(':nth-child(4)').children('button');
+	sellBtn.html('$'+TradeSim.sellPrize(m,p));
+	if(TradeSim.checkCanSell(m,p)) {
+		sellBtn.removeAttr('disabled');
+	} else {
+		sellBtn.attr('disabled', 'disabled');
+	}
+	if(TradeSim.checkCanBuy(m,p)) {
+		buyBtn.removeAttr('disabled');
+	} else {
+		buyBtn.attr('disabled', 'disabled');
+	}
+}
+
+TradeSim.updateDomUser = function(p) {
+	TradeSim.DOM.userMoney.html(TradeSim.user.money);
+	TradeSim.DOM.userStock.find('#userStock'+p).html(TradeSim.user.stock[p]);
 }
 
 TradeSim.initDOM = function() {
 	TradeSim.DOM.timer.html(TradeSim.duration);
-	var DOMUserStock = TradeSim.DOM.user.find('#userStock');
 	TradeSim.DOM.userMoney = TradeSim.DOM.user.find('#userMoney');
 	TradeSim.DOM.userMoney.html(TradeSim.user.money);
+	TradeSim.DOM.userStock = TradeSim.DOM.user.find('#userStock');
 	for(i = 0, l = TradeSim.products.length; i < l; i++) {
 		var product = TradeSim.products[i];
-		DOMUserStock.append('<tr><td><img src="'+product.img+'" />'+product.name+':</td><td id="userStock'+i+'">'+TradeSim.user.stock[i]+'</td></tr>');
+		TradeSim.DOM.userStock.append('<tr><td><img src="'+product.img+'" />'+product.name+':</td><td id="userStock'+i+'">'+TradeSim.user.stock[i]+'</td></tr>');
 	}
 	for(i = 0, l = TradeSim.markets.length; i < l; i++) {
 		var market = TradeSim.markets[i];
@@ -106,9 +157,10 @@ TradeSim.initDOM = function() {
 		TradeSim.DOM.markets[i] = [];
 		for(j = 0, m = TradeSim.products.length; j < m; j++) {
 			var product = TradeSim.products[j];
-			table.append('<tr id="marketProduct-'+i+'-'+j+'"><td><img src="'+product.img+'" />'+product.name+
-				'</td><td>'+market.stock[j]+'</td><td>$'+TradeSim.buyPrize(i,j)+'</td><td>$'+
-				TradeSim.sellPrize(i,j)+'</td></tr>');
+			table.append('<tr id="marketProduct-'+i+'-'+j+'" class="marketProduct"><td><img src="'+product.img+'" />'+product.name+
+				'</td><td>'+market.stock[j]+'</td><td><button class="buy" type="button">$'+TradeSim.buyPrize(i,j)+
+				'</button></td><td><button class="sell" type="button" disabled="disabled">$'+
+				TradeSim.sellPrize(i,j)+'</button></td></tr>');
 			TradeSim.DOM.markets[i][j] = table.find('#marketProduct-'+i+'-'+j);
 		}
 		$('#markets').append(DOMMarket).children('.market').first().show();
@@ -118,7 +170,11 @@ TradeSim.initDOM = function() {
 TradeSim.DOM = {
 	timer: $('#timer'),
 	markets: [],
-	user: $('#user')
+	user: $('#user'),
+	getRowIdFromButton: function(e) {
+		return e.parents('.marketProduct').attr('id');
+	},
+	userStock: null
 };
 
 TradeSim.maxStock = 100;
