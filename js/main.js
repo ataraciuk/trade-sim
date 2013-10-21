@@ -167,6 +167,10 @@ TradeSim.initDOM = function() {
 		}
 		$('#markets').append(DOMMarket).children('.market').first().show();
 	}
+	$('#restart').click(function(e) {
+		e.preventDefault();
+		location.reload();
+	});
 }
 
 TradeSim.DOM = {
